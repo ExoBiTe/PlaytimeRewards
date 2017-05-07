@@ -1,0 +1,53 @@
+name: PlaytimeRewards
+main: com.github.exobite.playtimerewards.CountMain
+version: 2.5
+author: ExoBiTe
+description: This Plugin Manages your Players Playtime and Rewards them.
+website: https://www.spigotmc.org/resources/32900/
+
+commands:  
+  Playtime:
+    description: Playtime Command
+    usage: /Playtime
+    aliases: pt
+  PlaytimeRewards:
+    description: PlaytimeReward Main Command
+    usage: /PlaytimeRewards | /pr
+    aliases: pr
+    
+permissions:
+  timerewards.*:
+    description: PlaytimeRewards Admin
+    children:
+      timerewards.seetime: true
+      timerewards.seetime.others: true
+      timerewards.reload: true
+      timerewards.editItem: true
+      timerewards.giveRewards: true
+      timerewards.listRewards: true
+      timerewards.seeRewardsOwn: true
+      timerewards.seeRewardsOthers: true
+  timerewards.seetime:
+    description: See your own Playtime
+    default: true
+  timerewards.seetime.others:
+    description: See the Playtime of other Players
+    default: op
+  timerewards.reload:
+    description: Reload config and reward files
+    default: op
+  timerewards.editItem:
+    description: Players can change Reward Items Ingame
+    default: op
+  timerewards.giveRewards:
+    description: Players can give Rewards to Players
+    default: op
+  timerewards.listRewards:
+    description: Players can list all avaible rewards
+    default: op
+  timerewards.seeRewardsOwn:
+    description: Players can see their own achieved Rewards
+    default: op
+  timerewards.seeRewardsOthers:
+    description: Players can see other Players achieved Rewards
+    default: op

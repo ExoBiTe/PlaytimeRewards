@@ -1,0 +1,118 @@
+#Updated Reward Config File for PlaytimeRewards
+#PlaytimeRewards by ExoBiTe @ https://www.spigotmc.org/resources/32900/
+#
+#List of all Items can be found here: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Material.html
+#List of all Sounds can be found here: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Sound.html
+#List of all Particles can be found here: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/Particle.html
+#List of all Enchantments can be found here: https://hub.spigotmc.org/javadocs/spigot/org/bukkit/enchantments/Enchantment.html
+#Avaible CountType entrys are REALTIME, PLAYTIME and SESSIONTIME
+#Trouble by setting up this File? Read through this: https://www.spigotmc.org/threads/1-11-2-playtimerewards-reward-your-players-for-their-playtime.199062/#post-2071360
+
+Rewards:
+  DailyLogin:
+    PlaytimeNeeded: 86400
+    CountType: 'REALTIME'
+    GlobalNotification: false
+    PlayerNotification: true
+    RewardName: '&3Daily &4Login'
+    RewardText: '&3Thank you for your Daily Login! Here is a Cookie!'
+    RewardCommand: ''
+    RewardConsole: ''
+    RewardItem:
+      Item: 'COOKIE'
+      Damage: 0
+      Amount: 1
+      DisplayName: '&4Cool &8Cookie&a!'
+      Lore:
+      - '&3A very good looking Cookie&7!'
+      Enchantments:
+        DURABILITY: 10
+        LUCK: 666
+    Effects:
+      SoundName: 'ENTITY_PLAYER_LEVELUP'
+      SoundPitch: 1
+      SoundVolume: 2
+      ParticleName: 'LAVA'
+      ParticleAmount: 20
+      ParticleSpeed: 0.1
+      ParticleOffsetX: 0.3
+      ParticleOffsetY: 0.1
+      ParticleOffsetZ: 0.3
+    LoopOptions:
+      EnableLoop: true
+      WaitFirst: false
+      MinPlaytime: 0 #Seconds
+      MaxPlaytime: 0 #Seconds
+      PermissionNeeded: ''
+
+  SessionPlaytime:
+    PlaytimeNeeded: 3600
+    CountType: 'SESSIONTIME'
+    GlobalNotification: false
+    PlayerNotification: false
+    RewardName: '&71 Hour Session-Playtime!'
+    RewardText: '&7Here´s your Reward for Playing 1 Hour in this Session! Continue Playing!'
+    RewardCommand: ''
+    RewardConsole: ''
+    RewardItem:
+      Item: 'COOKIE'
+      Damage: 0
+      Amount: 1
+      DisplayName: '&4Cool &8Cookie&a!'
+      Lore:
+      - '&3A very good looking Cookie&7!'
+      Enchantments:
+        DURABILITY: 10
+        LUCK: 666
+    Effects:
+      SoundName: 'ENTITY_PLAYER_LEVELUP'
+      SoundPitch: 2
+      SoundVolume: 10
+      ParticleName: 'FLAME'
+      ParticleAmount: 100
+      ParticleSpeed: 0.1
+      ParticleOffsetX: 0.3
+      ParticleOffsetY: 0.1
+      ParticleOffsetZ: 0.3
+    LoopOptions:
+      EnableLoop: true
+      WaitFirst: true
+      MinPlaytime: 0 #Seconds
+      MaxPlaytime: 0 #Seconds
+      PermissionNeeded: ''
+      
+  FirstLogin:
+    PlaytimeNeeded: 1
+    CountType: 'PLAYTIME'
+    GlobalNotification: true
+    PlayerNotification: false
+    RewardName: '&4FirstLogin'
+    RewardText: '&1Welcome to the Server!'
+    RewardCommand: ''
+    RewardConsole: ''
+    RewardItem:
+      Item: 'COOKIE'
+      Damage: 0
+      Amount: 1
+      DisplayName: '&4Cool &8Cookie&a!'
+      Lore:
+      - '&3A very good looking Cookie&7!'
+      Enchantments:
+        DURABILITY: 10
+        LUCK: 666
+    Effects:
+      SoundName: 'ENTITY_PLAYER_LEVELUP'
+      SoundPitch: 2
+      SoundVolume: 10
+      ParticleName: 'FLAME'
+      ParticleAmount: 100
+      ParticleSpeed: 0.1
+      ParticleOffsetX: 0.3
+      ParticleOffsetY: 0.1
+      ParticleOffsetZ: 0.3
+    LoopOptions:
+      EnableLoop: false
+      WaitFirst: false
+      MinPlaytime: 0 #Seconds
+      MaxPlaytime: 0 #Seconds
+      PermissionNeeded: ''

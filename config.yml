@@ -1,0 +1,52 @@
+#Config for PlaytimeRewards
+#PlaytimeRewards by ExoBiTe @https://www.spigotmc.org/members/258730/
+#Main Configuration
+Main:
+    #do not touch this value
+    Version: 2.5
+    
+    #Define your color-char here. Use it in the rewards.yml
+    ColorChar: '&'
+    
+    #Set to true if you want to get a console Notification if a Player Logs in with a not existing Loop/Reward.
+    msgUnknownLoops: false
+    
+    #Enable or disable mysql here. If enabled, make sure to insert your mysql-data below.
+    MySQL: false
+    
+    #ForceCommands only affects other Plugins with the commands /playtimerewards and|or /playtime.
+    #If set to false, this Plugin will try to force other plugin with the same command
+    #to take priority of the command.
+    #If set to true this plugin tries to execute its Commands, and cancel the other Plugin´s commands.
+    ForceCommands: false
+    
+    #if vanillaPlaytime is set to false, the Plugin will count the Playtimes for itself.
+    #If vanillaPlaytime is set to true, this Plugin will use the normal minecraft playtime counting
+    vanillaPlaytime: true
+    
+    #Set the delay between the automatic save-intervals. Set to 0 to disable auto-saving (not recommended!).
+    #As this Plugin only writes and reads data form files/mysql upon play login and quit, there may be a chance to data-loss
+    #when the server crashes. Auto-Save writes all data every interval to files/mysql. This prevents data-loss.
+    DataSaveInterval: 1800  #Seconds
+    
+    #You want to get always the Build of the Plugin? Simply set this to true.
+    #Enable SearchBeta to always get the latest Build.
+    #searchUpdates needs to be true!
+    autoUpdate: true
+ 
+Notification:
+    #If you want that i (the plugin developer) is able to send messages to your console (just messages, no commands etc.!) 
+    #set this to true. This can be used to notify you about big bugs, which you need to get notified about.
+    allowMessages: true
+
+    #You don´t like updates? Set this to false, and you won´t get a Update Notification!
+    searchUpdates: true
+    
+MySQL:
+    Host: localhost
+    Port: 3306
+    User: root
+    Password: 
+    Database: minecraftserver
+
+    

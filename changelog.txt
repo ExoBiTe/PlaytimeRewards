@@ -1,0 +1,145 @@
+Changelog from Version 1.7 to Version 1.8:
+	- Complete Re-write of the Plugin!
+	- Fixed a ton of Bugs:
+		- Particles and Sounds are now loaded seperated
+		- Items, Particles and Sounds can´t create Errors on loadup anymore
+	- Got rid of a few unused functions and classes
+	- MySQL got Removed (Buuuhuu.. :[ )
+	- Added new Things to the config:
+		- Update Notifications can now get turned on or off.
+		- As i´ll start releasing Betas, you can now decide of you want
+			to get notified on a Beta-Release
+		- Adding "MainClockSpeed: <Int>" to the config, will change the speed of the main Clock
+			- Default is MainClockSpeed: 50
+	- Re-wrote the Reward File
+		- It´s now a "fusion" of the old Reward.yml "Reward" and "Loops" part.
+		- There is no need to create Loops and assign Rewards to them anymore, now its
+			possible to turn Rewards directly into repeating rewards
+		- Your old rewards.yml will be renamed to rewards_old.yml, the old file won´t work with this Plugin anymore
+		- The Plugin has now 3 different time count-methods: 
+			- "REALTIME":
+				REALTIME is like the real-world clock. It counts also if the Player or the Server is offline.
+				
+			- "PLAYTIME":
+				PLAYTIME is the real-playtime of the Player on the Server. Just counts, while the Player is online on the Server.
+				
+			- "SESSIONTIME":
+				SESSIONTIME is similiar to PLAYTIME, except it gets reset to 0 if the Player disconnects. This means it just counts the
+				Playtime of the Player of the actual "session".
+			- Define these in the "CountType" Field for each Reward
+			
+Changelog to Version 2.1:
+	- Fixed a few issues with data/pathfinding.
+		- Uses now file.seperator instead of "/"
+		- Renames uppercase files to lowercase files
+	- Added the config Value Main.DebugMode <Boolean>, it activates a special logging on plugin loadup.
+		- Default is DebugMode: false
+		- Isn´t visible in the default config, can be pasted in.
+	- Added the config Value Main.ForceCommands: <Boolean>
+		- If another Plugin uses the same Commands than Playtimerewards and ForceCommands is set to false, PlaytimeRewards 
+			ignores the Command
+		- If another Plugin uses the same Commands than Playtimerewards and ForceCommands is set to true, PlaytimeRewards 
+			tries to deny the Command for the other Plugin
+		-Is for default set to ForceCommands: false
+	- PlaytimeRewards uses now other packagenames, as there occured some errors while running two of my Plugins on the same server.
+	
+Changelog from Version 2.1 to Version 2.2:
+	- Fixed an issue, where files didn´t load properly.
+	- Added many log-messages to the debug-mode
+	- Re-wrote the /playtime command:
+		- It now display a nicer text (in my opinion)
+	- Added the config value Main.vanillaPlaytime <boolean>, it tells the Plugin if it should count the Playtime 
+		for itself or if it should use Minecrafts playtime-counter
+		-is useful, if you got some Players which played before this Plugin was installed, as minecraft counted their Playtime
+			all the time.
+	- The Plugin should now load properly, and not to early or to late.
+	
+Changelog from Version 2.2 to Version 2.3_BETA:
+	- VanillaPlaytime is now for default set to true instead of false
+	- Added all Spigot Versions from 1.10 to 1.11.2 to the recommend Versions
+	- Added the Spigot Resource Page to the plugin.yml as website
+	- If the Player´s Inventory is full and he earns a Reward where he gets an Item, the gets now dropped on the Ground
+		instead of disappearing.
+	- Fixed a bug with the /pr reload command
+	- Added the Command /pr seeRewards [player]
+		- has two Permissions: timerewards.seeRewardsOwn and timerewards.seeRewardsOthers
+		- Display the specified player´s achieved Rewards.
+	- Added a config value Main.betaAccess <boolean>, it activates beta may-be bugged features
+		- Default is betaAccess: false
+		- Is just avaible for Beta Versions, has no effect in Full releases
+	- If you update the Plugin, the old config won´t be deleted anymore, it will get renamed to config_v<old version>.yml
+	- Added a framework for a changable motd
+	- With the use of the Plugin LagMonitor, i got rid of everything thread-blocking 
+
+Changes to Version 2.3:
+	Please note that some change notes arent listed here, but in 2.3_Beta as i didn´t change anything to some things.
+	- Added a tutorial for setting up the Rewards.yml at https://www.spigotmc.org/threads/1-11-2-playtimerewards-reward-your-players-for-their-playtime.199062/#post-2071360
+	- Did the first steps into compatibilty for older Minecraft Versions
+		- Works now from 1.9+ 
+	- Added MySQL Support
+		- Should work better and faster as the old one
+		- uses an own thread for data-handling (sending, receiving)
+		- saves userdata and their earned rewards, NOT the default rewards.
+		- NOT USABLE! WILL BE USABLE IN 2.4_BETA
+	- Bugfixes!
+		- fixed a few MySQL Bugs
+		- fixed a Bug where Reward Items, Sounds and Particles crashed the Plugin
+		- If a player bypasses the spigot-login-event (somehow its possible), this plugin recognizes this and creates the needed player data.
+		- fixed a bug where datalists didn´t got created which created errors
+		- 
+	- Worked out the changeable-motd framework from 2.3_Beta, to create a message-receiver for you.
+	- Added a config value Notification.allowMessages <boolean>, it enables/disables a message receiver from the developer
+		- Default is allowMessages: true
+		- is used to notify you about important things.
+		- IMPORTANT: I can´t send commands etc. to your server. I can just send info-messages to the console.
+	- Added an checker which checks some storage(file/mysql) variables every hour.
+	- Made a few changes to the Spigot Page (Added Commands, Permissions, some information notes and a planned list.)
+	
+Changelog from Version 2.3 to 2.4_BETA:
+	- Changed the way the motd works.
+		- If there´s no important message, the Plugin won´t show anything up.
+	- enabled the use of mysql!
+		- take a look at the config to see what has changed (mysql related!)
+	- wrote two different Objects:
+		- one that is used from Minecraft Version 1.9+ and one that is used from 1.8 and below.
+		- makes it possible to support versions back to 1.7 (i tested it until 1.7.10!)
+	- the plugin is now backwards-compatible!
+		- this means its compatible back to version 1.7
+		- the following things are disabled if you use minecraft 1.8 or older:
+			- particles and sounds for rewards are disabled
+			- updatechecker and motdchecker are disabled
+	- improved some of the code a bit, got rid of some comments and some unused functions
+
+Changelog from Version 2.4_BETA_PRE1 to 2.4_BETA2
+	- mysql now uses way less data sendings/receivings due to optimized code and better caching
+	- mysql now counts the sessionamount of each player
+	- removed unused code
+	- added a new server-versioncheck
+	- Players who already played on the server, get their mysql playtime set to their real playtime instead of 0
+	- removed a few debug-messages/moved them to debug-mode
+	- added the auto-save!
+		- saves data to files/mysql at each interval with a customisable delay (config)
+		- prevents data-loss on server-crashes etc.
+	- Added a config value Main.DataSaveInterval <Long>, it sets the delay of the auto-save function
+		- Default is DataSaveInterval: 1800 (30 Minutes)
+		- set it to zero, to disable the auto-save
+	
+Changelog from Version 2.4_BETA_FINAL to 2.4:
+	- the one-hour interval mysql-database-checker now works async
+	- added a new stats-value for pluginmetrics/bstats: reward_count
+		- keeps track of the amount of rewards you used
+		
+Changelog from Version 2.4 to 2.5 (including the 2.4_HotFix):
+	- the Plugin doesn´t crash anymore if an unknown Sound, Particle or Item is set in the rewards.yml
+	- the <player> Placeholder now works for any String in the Rewards file
+	- Added a few Debug Messages
+	- fixed a Bug in the reward-recognizing system, where Looping-Rewards were recognized as not-loop rewards.
+	- changed the delay of the mysql-checking/motd-checking clock from 2 hours to 1 hour
+	- The UpdateChecker works now async
+	- Coded a Auto-Update Function which downloads the newest Version of the Plugin
+	- Added a config value Main.AutoUpdate <Boolean>, it enables/disables the Plugins auto-update.
+		- Default is AutoUpdate: true
+		- Notification.searchUpdates needs to be true in order for this to work
+	- Beta Builds won´t get uploaded as main Resource anymore
+		- If i´ll publish more Beta Builds, i´ll post the dl into the discussions tab
+	
