@@ -3,7 +3,7 @@
 #Main Configuration
 Main:
     #do not touch this value
-    Version: 2.5
+    Version: 2.7
     
     #Define your color-char here. Use it in the rewards.yml
     ColorChar: '&'
@@ -18,7 +18,7 @@ Main:
     #If set to false, this Plugin will try to force other plugin with the same command
     #to take priority of the command.
     #If set to true this plugin tries to execute its Commands, and cancel the other Plugin´s commands.
-    ForceCommands: false
+    ForceCommands: true
     
     #if vanillaPlaytime is set to false, the Plugin will count the Playtimes for itself.
     #If vanillaPlaytime is set to true, this Plugin will use the normal minecraft playtime counting
@@ -33,6 +33,9 @@ Main:
     #Enable SearchBeta to always get the latest Build.
     #searchUpdates needs to be true!
     autoUpdate: true
+    
+    #Enter the Amount how many of the best Players get shown with /pttop.
+    TopAmount: 10
  
 Notification:
     #If you want that i (the plugin developer) is able to send messages to your console (just messages, no commands etc.!) 

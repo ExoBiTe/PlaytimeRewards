@@ -7,9 +7,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +27,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import com.github.exobite.playtimerewards.motd.AutoUpdate;
 import com.github.exobite.playtimerewards.motd.MOTDGet;
@@ -91,13 +89,17 @@ public class CountMain extends JavaPlugin {
 	static List<String> Commands;
 	static List<String> alias;
 	
+	//Loads upon first Player Join to show Offline Player Playtime
+	static Map<UUID, Long> loggedPlaytimes;
+	static Map<Long, UUID> topPlaytimes;
+	static int topAmount;
+	
 	//Data for Debugging!
 	public static boolean debugMode;
 	
 	//Set to false to prevent using the MySQL Connection!
 	public static boolean allowMySQL = true;
 	
-	@SuppressWarnings("deprecation")
 	@Override
 	public void onEnable(){
 		long time = System.currentTimeMillis();
@@ -105,6 +107,7 @@ public class CountMain extends JavaPlugin {
 		loadFull = utils.VersionsCheck();	//New VersionCheck
 		instance = this;
 		pData = new HashMap<UUID, playerData>();
+		topPlaytimes = new HashMap<Long, UUID>();
 		Commands = new ArrayList<String>();
 		alias = new ArrayList<String>();
 		itemEdit = new HashMap<UUID, RewardObject>();
@@ -143,20 +146,22 @@ public class CountMain extends JavaPlugin {
 		if(updateNotification) {
 			updateAvaible = false;
 			if(loadFull == vCheck.FULL){
-				Calendar cal = GregorianCalendar.getInstance();
+				/*Calendar cal = GregorianCalendar.getInstance();
 				Date d = new Date();
-				cal.set(Calendar.DAY_OF_MONTH, 7);	//Date of Release
-				cal.set(Calendar.MONTH, 5);
-				cal.set(Calendar.YEAR, 2017);
-				d.setHours(11);
-				d.setMinutes(7);
+				cal.set(Calendar.DAY_OF_MONTH, 12);	//Day of Release
+				cal.set(Calendar.MONTH, 7);			//Month of Release
+				cal.set(Calendar.YEAR, 2017);		//Year of Release
+				d.setHours(19);						//Release time
+				d.setMinutes(5);
 				cal.setTime(d);
 				
 				long should = cal.getTimeInMillis() + 6*3600000;
-				if(System.currentTimeMillis() > should){
+				System.out.println(System.currentTimeMillis() +">"+ should+"?");
+				if(System.currentTimeMillis() > should){*/
+					//System.out.println("Started Update!");
 					new UpdateCheck();
 					UpdateCheck.startUpdate(getDescription().getVersion(), true);
-				}
+				//}
 			}
 		}
 		if(allowMotd){
@@ -169,6 +174,12 @@ public class CountMain extends JavaPlugin {
 			if(!mysql_con()) return;
 		}
 		
+		new BukkitRunnable(){
+			@Override
+			public void run() {
+				CountMain.utils.wholeData();
+			}
+		}.runTaskLater(instance, 50);
 		long time2 = System.currentTimeMillis() - time;
 		send("Enabled! ("+time2+"ms)");
 	}
@@ -181,6 +192,12 @@ public class CountMain extends JavaPlugin {
 		        @Override
 		        public String getValue() {
 		            return RewardList.size()+"";
+		        }
+		    });
+			m.addCustomChart(new Metrics.SimplePie("auto_update") {
+		        @Override
+		        public String getValue() {
+		            return autoUpdate+"";
 		        }
 		    });
 			
@@ -207,14 +224,14 @@ public class CountMain extends JavaPlugin {
 		preAutoUpdateCounter++;
 		updateObj = obj;
 		if(updateObj.length == 2){
-			if(!checkNewer(getDescription().getVersion()+"", updateObj[0]+""))
+			//if(!checkNewer(getDescription().getVersion()+"", updateObj[0]+""))
 			updateAvaible = true;
 			send("\n=======================================================\n"
-					+ "====  "+getDescription().getName()+"\n"
-					+ "====  New update avaible:\n"
-					+ "====  New version: " + updateObj[0]+"\n"
-					+ "====  Your version: " + getDescription().getVersion()+"\n"
-					+ "====  What's new: " + updateObj[1]+"\n"
+					+ "==  "+getDescription().getName()+"\n"
+					+ "==  New update avaible:\n"
+					+ "==  New version: " + updateObj[0]+"\n"
+					+ "==  Your version: " + getDescription().getVersion()+"\n"
+					+ "==  What's new: " + updateObj[1]+"\n"
 					+ "=======================================================");
 		}else{
 			updateAvaible = false;
@@ -223,39 +240,6 @@ public class CountMain extends JavaPlugin {
 		if(preAutoUpdateCounter==2 && autoUpdate && updateAvaible){
 			new AutoUpdate();
 		}
-	}
-	
-	private boolean checkNewer(String actualVersion, String newVersion){
-		List<Integer> numbers1 = new ArrayList<Integer>();
-		List<Integer> numbers2 = new ArrayList<Integer>();
-		try{
-			for(String s:actualVersion.split("\\.")){
-				int toAdd = Integer.valueOf(s);
-				numbers1.add(toAdd);
-			}
-			for(String s:actualVersion.split("\\.")){
-				int toAdd = Integer.valueOf(s);
-				numbers2.add(toAdd);
-			}
-		}catch(Exception e){
-			return true;
-		}
-		if(numbers2.size()>numbers1.size()){
-			return true;
-		}else if(numbers1.size()>numbers2.size()){
-			return false;
-		}
-		//Both Lists have the same size!
-		for(int i1:numbers1){
-			int i2 = numbers2.get(numbers1.indexOf(i1));
-			if(i1>i2){
-				return false;
-			}else if(i1<i2){
-				return true;
-			}
-		}
-		//This should never get reached
-		return false;
 	}
 	
 	public void autoUpdateDone(){
@@ -270,10 +254,10 @@ public class CountMain extends JavaPlugin {
 		
 		//saves all data on disable for online players (reload) :/
 		if(Bukkit.getOnlinePlayers() != null){if(Bukkit.getOnlinePlayers().size()>0){
-				for(Player p:Bukkit.getOnlinePlayers()){
-					playerData pDat = pData.get(p.getUniqueId());
-					pDat.logOut(false);
-				}
+			for(Player p:Bukkit.getOnlinePlayers()){
+				playerData pDat = pData.get(p.getUniqueId());
+				pDat.logOut(false, false);
+			}
 			}
 		}
 		for(String rName:RewardList.keySet()){
@@ -281,7 +265,7 @@ public class CountMain extends JavaPlugin {
 			if(rw.getItemChange()) rw.saveItem();
 		}
 		
-		Bukkit.getScheduler().cancelAllTasks();
+		Bukkit.getScheduler().cancelTasks(this);
 		
 		pData.clear();
 		RewardList.clear();
@@ -312,7 +296,9 @@ public class CountMain extends JavaPlugin {
 	
 	public boolean onCommand(CommandSender sender, Command arg1, String arg2, String[] args) {
 		if(Commands.contains(arg2.toLowerCase()) || alias.contains(arg2.toLowerCase())){						//Producing errors..?
-			if(debugMode) send("Another Plugin uses this Command, returning...");
+			if(debugMode){
+				send("Another Plugin uses this Command, returning...");
+			}
 			return true;
 		}
 		
@@ -322,6 +308,24 @@ public class CountMain extends JavaPlugin {
 		}else if(arg2.toLowerCase().equals("pt") || arg2.toLowerCase().equals("playtime")){
 			playtimeCommand cmd = new playtimeCommand();
 			return cmd.onCommand(sender, arg1, arg2, args);
+		}else if(arg2.toLowerCase().equals("pttop") || arg2.toLowerCase().equals("playtimetop")){
+			if(!sender.hasPermission("timerewards.seeTop")){
+				sender.sendMessage(ChatColor.RED+"Sorry, you don´t have enough Permissions to do this.");
+				return true;
+			}
+			String s = ChatColor.GOLD+"Displaying the top "+topAmount+" Players:";
+			for(Long l:topPlaytimes.keySet()){
+				UUID id = topPlaytimes.get(l);
+				Long playtime;
+				if(CountMain.pData.containsKey(id)){
+					playtime = CountMain.pData.get(id).getPlaytimeNow();
+				}else{
+					playtime = loggedPlaytimes.get(id);
+				}
+				s = s + "\n"+ChatColor.GOLD+l+". "+ChatColor.GREEN+Bukkit.getOfflinePlayer(id).getName()+ChatColor.GOLD+": "+utils.getTime(playtime);
+			}
+			sender.sendMessage(s);
+			return true;
 		}else{
 			return false;
 		}
@@ -331,6 +335,7 @@ public class CountMain extends JavaPlugin {
 	private void loadOtherPluginCommands(){
 		PluginManager pm = this.getServer().getPluginManager();
 		for(Plugin p:pm.getPlugins()){
+			if(p == pm.getPlugin(this.getDescription().getName())) continue;			//Skip this Plugin
 			Map<String, Map<String, Object>> cmds = p.getDescription().getCommands();
 			if(cmds == null) return;
 			for(String x1:cmds.keySet()){
@@ -379,6 +384,7 @@ public class CountMain extends JavaPlugin {
 		allowBetaFeatures = config.getBoolean("Main.betaAccess", false);			//Optional, not in default Config
 		if(!getDescription().getVersion().toLowerCase().contains("beta")) allowBetaFeatures = false;
 		allowMotd = config.getBoolean("Notification.allowMessages", true);
+		topAmount = config.getInt("Main.TopAmount", 10);
 		autoUpdate = config.getBoolean("Main.autoUpdate", true);
 		debugMode = config.getBoolean("Main.DebugMode", false);						//Optional, not in default Config
 		if(debugMode) send("Running Plugin in Debug Mode!");
@@ -425,7 +431,7 @@ public class CountMain extends JavaPlugin {
 		try {
 			if(!mysql) return;
 			if(con == null || con.isClosed()) return;
-			Connection createDb = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/?user=" + user + "&password=" + password + "&autoReconnect=false");
+			Connection createDb = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/?user=" + user + "&password=" + password + "&autoReconnect=true");
 			if(!createDb.isClosed()){
 				createDb.createStatement().executeUpdate("CREATE DATABASE IF NOT EXISTS "+database);
 				createDb.close();
@@ -623,7 +629,7 @@ public class CountMain extends JavaPlugin {
 	
 	public void reloadConfigCustom(){
 		//Clean up
-		Bukkit.getScheduler().cancelTask(mainClockId);
+		/*Bukkit.getScheduler().cancelTask(mainClockId);
 		RewardLongs.clear();
 		RewardList.clear();
 		Commands.clear();
@@ -634,7 +640,10 @@ public class CountMain extends JavaPlugin {
 		loadRewards();
 		loadOtherPluginCommands();
 		mainClockId = mainClock();
-		send("Config.yml and Rewards.yml reloaded!");
+		send("Config.yml and Rewards.yml reloaded!");*/
+		
+		onDisable();
+		onEnable();
 	}
 	
 	public void send(String Message){
@@ -666,6 +675,11 @@ public class CountMain extends JavaPlugin {
 						}
 					}
 				}
+				new BukkitRunnable(){
+					public void run(){
+						if(CountMain.loggedPlaytimes != null) CountMain.topPlaytimes = CountMain.utils.getTop(CountMain.topAmount, CountMain.loggedPlaytimes);
+					}
+				}.runTaskAsynchronously(instance);
 			}
 		}, mainClockSpeed, mainClockSpeed);	//Default set to 2,5 Seconds
 		return taskID;
@@ -695,7 +709,7 @@ public class CountMain extends JavaPlugin {
 				if(Bukkit.getOnlinePlayers() != null){if(Bukkit.getOnlinePlayers().size()>0){
 						for(Player p:Bukkit.getOnlinePlayers()){
 							playerData pDat = pData.get(p.getUniqueId());
-							pDat.logOut(false);
+							pDat.logOut(false, true);
 						}
 					}
 				}

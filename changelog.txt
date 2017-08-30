@@ -143,3 +143,26 @@ Changelog from Version 2.4 to 2.5 (including the 2.4_HotFix):
 	- Beta Builds won´t get uploaded as main Resource anymore
 		- If i´ll publish more Beta Builds, i´ll post the dl into the discussions tab
 	
+Changelog from Version 2.5 to 2.6:
+	- Updates the Custom Reload Command to get done with the new async threads
+	- added the Plugin source
+	- added compatibility with Minecraft 1.12 / 1.12pre 
+	- Fixed a Bug where mysql closed the database connection
+	- Added a Command: /pttop!
+		- /pttop displays the x players with the longest playtime on the server
+		- Permission Node is timerewards.seeTop
+	- /pt <Offlineplayer>
+		- You can now look up a Players playtime even if the Player is offline!
+	- Fixed a Bug where Sessiontime Rewards doesn´t get earned
+	- Changed the Update-Message a bit
+	
+Changelog from Version 2.6 to 2.7:
+	- File-Datasaving works now Async
+	- File-Datasave and Mysql-Datasave got Sync Methods, which get used when the Server shuts down 
+		while Players are online, to prevent data-loss.
+	- The Command-scanner doesn´t scan this Plugin anymore, which could cause commands not to work
+	- MySQL-Queries are now Case-Sensitive written
+	- /pr reload has been disabled due to many Bugs occuring with this Command
+	- fixed a bug that caused the updatechecker not to work properly
+	- The UpdateChecker checks now if there is a newer Version, not just if there is another Version
+	

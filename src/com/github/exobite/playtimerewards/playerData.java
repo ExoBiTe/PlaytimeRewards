@@ -20,6 +20,8 @@ import org.bukkit.Statistic;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import com.github.exobite.playtimerewards.motd.Callback;
@@ -57,7 +59,7 @@ public class playerData {
 	
 	private void getFileData(){
 		File f = CountMain.pDataDir;
-		Player p = Bukkit.getPlayer(uuid);
+		Player p = p();
 		if(p==null){
 			System.err.println("[PlaytimeRewards] Error, Player with UUID "+uuid+" seems to be offline!");
 			System.err.println("[PlaytimeRewards] Aborting Action on this Player!");
@@ -81,7 +83,7 @@ public class playerData {
 			}
 		}
 		if(CountMain.vanillaCount){
-			playtime = Bukkit.getPlayer(uuid).getStatistic(Statistic.PLAY_ONE_TICK) /20;
+			playtime = (p().getStatistic(Statistic.PLAY_ONE_TICK) /20)*1000;	//	Tick/20 = Seconds. *1000 = Milliseconds
 		}
 		if(playerDat.contains("Players."+uuid+".RewardData")==false){
 			playerDat.createSection("Players."+uuid+".RewardData");
@@ -134,24 +136,31 @@ public class playerData {
 		if(!(Names.contains(p.getName()))) Names.add(p.getName());
 	}
 	
-	public void logOut(boolean removeFromList){
+	public void logOut(boolean removeFromList, boolean async){
 		Logout =  System.currentTimeMillis();
 		long newPlaytime = Logout - joinNow;
 		playtime = playtime + newPlaytime;
+		if(CountMain.vanillaCount) playtime = (p().getStatistic(Statistic.PLAY_ONE_TICK) /20)*1000;
 		if(!gotData){
 			if(removeFromList) CountMain.pData.remove(uuid);
 			return;
 		}
-		if(CountMain.mysql){
-			saveDataToMySQL();
+		if(CountMain.mysql && async){
+			saveDataToMySQLAsync();
+		}else if(CountMain.mysql && !async){
+			saveDataToMySQLSync();
+		}else if(!CountMain.mysql && async){
+			saveDataToFileAsync();
+		}else if(!CountMain.mysql && !async){
+			saveDataToFileSync();
 		}else{
-			saveDataToFile();
+			//WUT?!
 		}
 		if(removeFromList) CountMain.pData.remove(uuid);
 	}
 	
 	
-	void saveDataToFile(){
+	private void saveDataToFileSync(){
 		File f = CountMain.pDataDir;
 		FileConfiguration playerDat = YamlConfiguration.loadConfiguration(f);
 		playerDat.options().copyHeader(true);
@@ -173,13 +182,40 @@ public class playerData {
 		}
 	}
 	
+	private void saveDataToFileAsync(){
+		new BukkitRunnable(){
+			@Override
+			public void run() {
+				File f = CountMain.pDataDir;
+				FileConfiguration playerDat = YamlConfiguration.loadConfiguration(f);
+				playerDat.options().copyHeader(true);
+				try {
+					playerDat.set("Players."+uuid+".lastLogin", joinNow);
+					playerDat.set("Players."+uuid+".playTime", playtime);
+					playerDat.set("Players."+uuid+".Names", Names);
+					playerDat.set("Players."+uuid+".Sessions", sessionCount);
+					if(Rewards != null){ if(Rewards.size()>0){
+						for(String str:Rewards.keySet()){
+							if(CountMain.RewardList.get(str).loopType() != CountType.SESSIONTIME){
+								playerDat.set("Players."+uuid+".RewardData."+str, Rewards.get(str));
+							}
+						}
+					}}
+					playerDat.save(f);
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}.runTaskAsynchronously(CountMain.getInstance());
+	}
+	
 	public void getReward(RewardObject r, boolean check){
 		if(CountMain.debugMode) System.out.println("Reward "+r.internalName()+" checking...");
-		Player p = Bukkit.getPlayer(uuid);
+		Player p = p();
 		if(p==null){
 			System.err.println("[PlaytimeRewards] Error, Player with UUID "+uuid+" seems to be offline!");
 			System.err.println("[PlaytimeRewards] Aborting Action on this Player!");
-			logOut(true);
+			logOut(true, true);
 			return;
 		}
 		if(Rewards.containsKey(r.internalName()) && check && r.hasLoop() && !checkLoopTime(r)){
@@ -243,7 +279,17 @@ public class playerData {
 		if(r.msg()) p.sendMessage(setPlayer(r.Message()));
 		if(r.hasItem()) {
 			if(p.getInventory().firstEmpty()>0){
-				p.getInventory().addItem(r.getItemstack());
+				ItemStack is = r.getItemstack();
+				if(is.getItemMeta().getLore()!=null){
+					List<String> newLore = new ArrayList<String>();
+					ItemMeta meta = is.getItemMeta();
+					for(String s:meta.getLore()){
+						newLore.add(setPlayer(s));
+					}
+					meta.setLore(newLore);
+					is.setItemMeta(meta);
+				}
+				p.getInventory().addItem(is);
 			}else{
 				p.getLocation().getWorld().dropItemNaturally(p.getLocation(), r.getItemstack());
 			}
@@ -291,7 +337,7 @@ public class playerData {
 	long getPlaytimeNow(){
 		long rVal = 0L;
 		if(CountMain.vanillaCount){
-			rVal = (Bukkit.getPlayer(uuid).getStatistic(Statistic.PLAY_ONE_TICK)/20)*1000;
+			rVal = (p().getStatistic(Statistic.PLAY_ONE_TICK)/20)*1000;
 		}else{
 			rVal = playtime+System.currentTimeMillis()-joinNow;
 		}
@@ -368,6 +414,7 @@ public class playerData {
 				continue;
 			}else{
 				long val = rewardList.get(str);
+				if(CountMain.RewardList.get(str).loopType() == CountType.SESSIONTIME) val = 0L;	//SESSIONTIME FIX (RESET)
 				Rewards.put(str, val);
 			}
 		}
@@ -433,11 +480,11 @@ public class playerData {
 						String Query = "INSERT INTO PR_PlayerData (UUID, lastLogin, playTime, sessionCount) VALUES (?, 0, ?, 1)";
 						PreparedStatement prstmt = con.prepareStatement(Query);
 		        		prstmt.setString(1, uuid+"");
-		        		prstmt.setLong(2, Bukkit.getPlayer(uuid).getStatistic(Statistic.PLAY_ONE_TICK) /20);
+		        		prstmt.setLong(2, p().getStatistic(Statistic.PLAY_ONE_TICK) /20);
 		        		prstmt.execute();
 		        		prstmt.close();
 		        		list.add(0+"");
-		        		list.add((Bukkit.getPlayer(uuid).getStatistic(Statistic.PLAY_ONE_TICK) /20)+"");
+		        		list.add((p().getStatistic(Statistic.PLAY_ONE_TICK) /20)+"");
 		        		list.add(0+"");
 					}
 					mysqlLoginRewards = rewards;
@@ -458,8 +505,96 @@ public class playerData {
 	    }.runTaskAsynchronously(CountMain.getInstance());
 	}
 	
-	private void saveDataToMySQL(){
+	private void saveDataToMySQLAsync(){
 		Bukkit.getScheduler().runTaskAsynchronously(CountMain.getInstance(), new Runnable(){
+
+			@Override
+			public void run() {
+				try{
+					//Try to check for not needed replacements
+					Map<String, Long> uploadRewards = new HashMap<String, Long>();
+					List<String> delEntrys = new ArrayList<String>();
+					if(mysqlLoginRewards != null){
+						for(String x:Rewards.keySet()){
+							if(mysqlLoginRewards.containsKey(x)){
+								Long val1 = mysqlLoginRewards.get(x);
+								Long val2 = Rewards.get(x);
+								if(val1 > val2 || val1 < val2){		//IF NOT EQUALS
+									uploadRewards.put(x, val2);
+									delEntrys.add(x);
+								}
+							}else{
+								uploadRewards.put(x, Rewards.get(x));
+							}
+						}
+					}else{
+						uploadRewards = Rewards;
+					}
+					
+					//building the delete Query
+					String delQuery = "DELETE FROM PR_PlayerLoops WHERE (UUID, loopName) IN (";	//(1,2), (uuid, name)...
+					int counter = 0;
+					for(String x:delEntrys){
+						counter++;
+						if(counter==1){
+							String toAdd = "('"+uuid+"','"+x+"')";		//"('uuid', 'name')"
+							delQuery = delQuery + toAdd;
+						}else{
+							String toAdd = ", ('"+uuid+"','"+x+"')";	//", ('uuid', 'name')"
+							delQuery = delQuery + toAdd;
+						}
+					}
+					delQuery = delQuery + ")";
+					if(CountMain.debugMode) System.out.println(delQuery);
+					
+					
+					Connection con = CountMain.con;
+					String Query = "UPDATE PR_PlayerData SET lastLogin = ?, playTime = ?, sessionCount = ? WHERE UUID = ?";
+					PreparedStatement prstmt = con.prepareStatement(Query);
+	        		prstmt.setString(4, uuid+"");
+	        		prstmt.setLong(1, joinNow);
+	        		prstmt.setLong(2, playtime);
+	        		prstmt.setLong(3, sessionCount);
+	        		prstmt.execute();
+	        		prstmt.close();
+	        		
+	        		if(delEntrys.size()!=0){		//Execute just if there are deleteable entrys
+	        			PreparedStatement prstmt2 = con.prepareStatement(delQuery);
+		        		prstmt2.execute();
+		        		prstmt2.close();
+	        		}
+
+	        		String QueryStart = "INSERT INTO PR_PlayerLoops (UUID, loopName, loopValue) VALUES ";		//(?, 0, 0), (?, 0, 0), [...]
+	        		
+	        		int amount = 0;
+	        		for(String str:uploadRewards.keySet()){
+	        			amount++;
+	        			String struuid = uuid+"";
+	        			if(amount==1){
+	        				QueryStart = QueryStart + "('"+struuid+"', '"+str+"', "+uploadRewards.get(str)+")";
+	        			}else{
+	        				QueryStart = QueryStart + ", ('"+struuid+"', '"+str+"', "+uploadRewards.get(str)+")";
+	        			}
+	        		}
+	        		//QueryStart = QueryStart + ";";
+	        		if(uploadRewards.size()!=0){		//Execute just if there are deleteable entrys
+	        			if(CountMain.debugMode) System.out.println(QueryStart);
+		        		PreparedStatement prstmt3 = con.prepareStatement(QueryStart);
+		        		prstmt3.execute();
+		        		prstmt3.close();
+	        		}
+	        		
+				}catch(SQLException e){
+					
+					e.printStackTrace();
+				}
+			}
+			
+		});
+	}
+	
+	private void saveDataToMySQLSync(){
+		Bukkit.getScheduler().runTask(CountMain.getInstance(), new Runnable(){
 
 			@Override
 			public void run() {

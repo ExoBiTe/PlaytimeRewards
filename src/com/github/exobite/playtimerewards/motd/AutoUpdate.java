@@ -16,6 +16,7 @@ public class AutoUpdate {
 	
 	public AutoUpdate(){
 		getUpdate();
+		CountMain.getInstance().send("Starting autoUpdate!");
 	}
 	
 	private void getUpdate(){

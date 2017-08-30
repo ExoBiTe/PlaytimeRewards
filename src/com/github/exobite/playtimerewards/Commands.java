@@ -26,7 +26,9 @@ public class Commands {
 			return true;
 		}
 		if(args[0].equalsIgnoreCase("reload")){
-			if(sender instanceof Player){
+			sender.sendMessage("Sorry, but this Command is disabled in this Version.");
+			return true;
+			/*if(sender instanceof Player){
 				if(!(sender.hasPermission("timerewards.reload"))){
 					sender.sendMessage(ChatColor.RED+noPermission);
 					return true;
@@ -34,7 +36,7 @@ public class Commands {
 			}
 			CountMain.getInstance().reloadConfigCustom();
 			sender.sendMessage(ChatColor.GREEN+"[PlaytimeRewards] Config.yml and rewards.yml reloaded!");
-			return true;
+			return true;*/
 		}else if(args[0].equalsIgnoreCase("editItem")){
 			if(!(sender.hasPermission("timerewards.editItems"))) {
 				sender.sendMessage(ChatColor.RED+noPermission);

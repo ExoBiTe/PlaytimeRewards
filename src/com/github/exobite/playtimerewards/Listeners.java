@@ -16,13 +16,17 @@ public class Listeners implements Listener {
 	public void onJoin(PlayerJoinEvent e){
 		Player p = e.getPlayer();
 		new playerData(p);
+		//Loads all Offline Playerdata
+		if(CountMain.loggedPlaytimes==null){
+			CountMain.utils.wholeData();
+		}
 	}
 	
 	@EventHandler
 	public void onQuit(PlayerQuitEvent e){
 		Player p = e.getPlayer();
 		playerData pDat = CountMain.pData.get(p.getUniqueId());
-		pDat.logOut(true);
+		pDat.logOut(true, true);
 	}
 	
 	@EventHandler
