@@ -11,6 +11,12 @@ import com.github.exobite.playtimerewards.vCheck;
 
 public class MOTDGet {
 	
+	public abstract class rVal{
+		
+		public abstract void r(Object...objects);
+		
+	}
+	
 	//private static final String FILE_URL = "https://rebrand.ly/motd";	OLD URL, doesn´t use the new control format
 	private static final String FILE_URL = "https://rebrand.ly/pr-newmotd";
 	
@@ -43,6 +49,27 @@ public class MOTDGet {
 		                @Override
 		                public void run(){
 		                    cb.execute(f);
+		                }
+		            }.runTask(CountMain.getInstance());
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+	        }
+	    }.runTaskAsynchronously(CountMain.getInstance());
+	}
+	
+	public void doAsyncGetFile(final String url, final rVal rv) {
+	    new BukkitRunnable() {
+	        @Override
+	        public void run(){
+	        	try {
+					final File f = new File(CountMain.getInstance().getDataFolder() + File.separator + "tempData.txt");
+					URL l = new URL(url);
+					FileUtils.copyURLToFile(l, f);
+		            new BukkitRunnable() {
+		                @Override
+		                public void run(){
+		                    rv.r(f);
 		                }
 		            }.runTask(CountMain.getInstance());
 				} catch (Exception e) {

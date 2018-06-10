@@ -166,3 +166,17 @@ Changelog from Version 2.6 to 2.7:
 	- fixed a bug that caused the updatechecker not to work properly
 	- The UpdateChecker checks now if there is a newer Version, not just if there is another Version
 	
+Changelog from Version 2.7 to 2.8:
+	- Added a Config Value Notification.sendAdress <boolean>, it sends me your Server Adress to add you in the Using Server list
+		- Default is: sendAdress: false 
+	- Removed the ConfigValue Main.vanillaPlaytime <boolean>. It is now defaultly set to true.
+		- You can still change it if you paste vanillaPlaytime: false into the Config.
+	
+Changelog from Version 2.8 to 2.9:
+	- removed Config.sendAdress <boolean>, wasn´t used.
+	- added a lang.yml and a reading system, which is already written in cleaner better code, the first part for the v3.0 rewrite.
+	- created the #ptr_unlocked menu which is a debug menu
+		- it is recommend to not use this unless you´re knowing what you´re doing
+		- needs to set the config value Main.UnlockedMode to true.
+		- accesses the plugins runtime-cache and allows the player to set/get program data and to call java methods from ingame.
+	- 

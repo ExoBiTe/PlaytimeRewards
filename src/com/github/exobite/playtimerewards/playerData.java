@@ -25,6 +25,8 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import com.github.exobite.playtimerewards.motd.Callback;
+import com.github.exobite.playtimerewards.update.LangManager;
+import com.github.exobite.playtimerewards.update.Message;
 
 public class playerData {
 	
@@ -273,7 +275,8 @@ public class playerData {
 			}
 		}
 		if(r.playerNotification()){
-			String playerMsg = ChatColor.GREEN+"You obtained the Reward "+ChatColor.GOLD+r.Name()+ChatColor.GREEN+"!";
+			//String playerMsg = ChatColor.GREEN+"You obtained the Reward "+ChatColor.GOLD+r.Name()+ChatColor.GREEN+"!";
+			String playerMsg = LangManager.getFormatMessage(Message.PLAYER_NOTIFICATION_REWARD_OBTAINED, new String[] {r.Name()}, null);
 			p.sendMessage(playerMsg);
 		}
 		if(r.msg()) p.sendMessage(setPlayer(r.Message()));
@@ -296,7 +299,8 @@ public class playerData {
 			
 		}
 		if(r.globalNotification()){
-			String globalMsg = ChatColor.GREEN+p.getName()+" obtained the Reward "+ChatColor.GOLD+r.Name()+ChatColor.GREEN+"!";
+			//String globalMsg = ChatColor.GREEN+p.getName()+" obtained the Reward "+ChatColor.GOLD+r.Name()+ChatColor.GREEN+"!";
+			String globalMsg = LangManager.getFormatMessage(Message.GLOBAL_NOTIFICATION_REWARD_OBTAINED, new String[] {p.getName(), r.Name()}, null);
 			for(Player x:Bukkit.getOnlinePlayers()){
 				x.sendMessage(globalMsg);
 			}

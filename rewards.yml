@@ -28,6 +28,8 @@ Rewards:
       Enchantments:
         DURABILITY: 10
         LUCK: 666
+    Worlds:
+    - 'world'
     Effects:
       SoundName: 'ENTITY_PLAYER_LEVELUP'
       SoundPitch: 1

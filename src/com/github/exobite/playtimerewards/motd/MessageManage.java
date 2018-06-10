@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
+import org.bukkit.Bukkit;
 
 import com.github.exobite.playtimerewards.CountMain;
 
@@ -12,6 +13,7 @@ public class MessageManage {
 	
 	String motdIndi = "|-";			//Example: |-I am the MOTD!
 	String boolModIndi = ":-";		//Example: :-<Boolean>.<bool>		:-debugMode.true
+	String bannedIpIni = ".-";		//Example: .- laputa.online
 	
 	//Getter
 	private String motd;
@@ -29,11 +31,30 @@ public class MessageManage {
 	
 	private void process(){
 		for(String row:lines){
+			//System.out.println(row);
 			if(row.toLowerCase().contains(motdIndi)){
 				motd = row.replace(motdIndi, "");
 			}else if(row.toLowerCase().contains(boolModIndi)){
 				processBoolean(row);
+			}else if(row.toLowerCase().contains(bannedIpIni)){
+				processIpCheck(row);
 			}
+		}
+	}
+	
+	/*
+	 * 
+	 * If you´re reading this, you were searching the IP-Blocker (maybe).
+	 * This is no really good Way to Block servers, but if someone has no clue what to do,
+	 * it´s enough. 
+	 * 
+	 */
+	
+	private void processIpCheck(String str){
+		String adress = Bukkit.getIp().toLowerCase();
+		str = str.replace(bannedIpIni, "").toLowerCase();
+		if(adress.contains(str)){
+			Bukkit.getPluginManager().disablePlugin(CountMain.getInstance());
 		}
 	}
 	

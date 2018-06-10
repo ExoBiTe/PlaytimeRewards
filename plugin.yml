@@ -1,6 +1,6 @@
 name: PlaytimeRewards
 main: com.github.exobite.playtimerewards.CountMain
-version: 2.7
+version: 0.17
 author: ExoBiTe
 description: This Plugin Manages your Players Playtime and Rewards them.
 website: https://www.spigotmc.org/resources/32900/
@@ -59,3 +59,6 @@ permissions:
   timerewards.seeTop:
     description: Players can see the top # players
     default: true
+  timerewards.unlockedAccess:
+    description: Mainly for debug Purposes. If you dont know what this permission does dont give it anyone
+    default: false

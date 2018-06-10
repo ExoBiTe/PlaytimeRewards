@@ -1,7 +1,10 @@
 package com.github.exobite.playtimerewards;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -14,6 +17,7 @@ import java.util.Set;
 import java.util.UUID;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -33,6 +37,8 @@ import com.github.exobite.playtimerewards.motd.AutoUpdate;
 import com.github.exobite.playtimerewards.motd.MOTDGet;
 import com.github.exobite.playtimerewards.motd.MessageManage;
 import com.github.exobite.playtimerewards.motd.UpdateCheck;
+import com.github.exobite.playtimerewards.update.LangManager;
+import com.github.exobite.playtimerewards.Metrics;
 
 public class CountMain extends JavaPlugin {
 	
@@ -63,6 +69,7 @@ public class CountMain extends JavaPlugin {
 	static boolean vanillaCount;
 	static boolean allowBetaFeatures;		//Activates Beta Features
 	static boolean allowMotd;
+	static boolean unlocked;
 	static String motd;
 	private MOTDGet motdget;
 	private int preAutoUpdateCounter;
@@ -74,7 +81,7 @@ public class CountMain extends JavaPlugin {
 	static boolean downloadDone;
 	
 	static java.sql.Connection con;
-	static boolean mysql;
+	static boolean mysql, useSSL;
 	static String user, password, database, host, port;
 	static String[] mysqlDat;
 	
@@ -104,6 +111,7 @@ public class CountMain extends JavaPlugin {
 	public void onEnable(){
 		long time = System.currentTimeMillis();
 		utils = new Utils();
+		new LangManager(this);				//New Code, Move over to v3.0 rewrite
 		loadFull = utils.VersionsCheck();	//New VersionCheck
 		instance = this;
 		pData = new HashMap<UUID, playerData>();
@@ -132,6 +140,7 @@ public class CountMain extends JavaPlugin {
 		mainClockId = mainClock();
 		asyncClock();
 		if(dataSaveInterval>0) saveDataClock();
+		if(unlocked) System.out.println("Unlocked Mode PTR_v."+this.getDescription().getVersion());
 		
 		manageMetrics();
 		
@@ -145,7 +154,7 @@ public class CountMain extends JavaPlugin {
 		
 		if(updateNotification) {
 			updateAvaible = false;
-			if(loadFull == vCheck.FULL){
+			if(loadFull == vCheck.FULL && updateAvaible){				//Impossible.
 				/*Calendar cal = GregorianCalendar.getInstance();
 				Date d = new Date();
 				cal.set(Calendar.DAY_OF_MONTH, 12);	//Day of Release
@@ -161,6 +170,7 @@ public class CountMain extends JavaPlugin {
 					//System.out.println("Started Update!");
 					new UpdateCheck();
 					UpdateCheck.startUpdate(getDescription().getVersion(), true);
+				//Auto-Update is DISABLED
 				//}
 			}
 		}
@@ -180,6 +190,7 @@ public class CountMain extends JavaPlugin {
 				CountMain.utils.wholeData();
 			}
 		}.runTaskLater(instance, 50);
+		loadUserData();
 		long time2 = System.currentTimeMillis() - time;
 		send("Enabled! ("+time2+"ms)");
 	}
@@ -200,10 +211,50 @@ public class CountMain extends JavaPlugin {
 		            return autoUpdate+"";
 		        }
 		    });
+			m.addCustomChart(new Metrics.SimplePie("save_type") {
+		        @Override
+		        public String getValue() {
+		        	if(mysql){
+		        		return "MySQL-Storage";
+		        	}else{
+		        		return "Flat-File Storage";
+		        	}
+		            
+		        }
+		    });
+			if(debugMode){
+				System.out.println("mDat: reward_count: "+RewardList.size());
+				System.out.println("mDat: auto_update: "+autoUpdate);
+			}
 			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public void updateConfig(File toSave){
+		try {
+			InputStream is = getResource("config.yml");
+			File s = new File(getDataFolder()+File.separator+"nothing_to_see_here");
+			OutputStream os;
+			os = new FileOutputStream(s);
+			IOUtils.copy(is, os);
+			os.close();
+			FileConfiguration cfg = YamlConfiguration.loadConfiguration(s);
+			FileConfiguration cfgOld = YamlConfiguration.loadConfiguration(toSave);
+			Set<String> keys = cfg.getKeys(true);
+			for(String Key:keys){
+				Object e = cfgOld.get(Key, null);
+				if(e==null){
+					Object Value = cfg.get(Key);
+					cfgOld.set(Key, Value);
+				}
+			}
+			cfgOld.save(toSave);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
 	}
 	
 	public void setMotd(File f){
@@ -380,7 +431,7 @@ public class CountMain extends JavaPlugin {
 		mysql = config.getBoolean("Main.MySQL", false);
 		msgUnknownLoops = config.getBoolean("Main.msgUnknownLoops", false);
 		forceOwnCommands = config.getBoolean("Main.ForceCommands", false);
-		vanillaCount = config.getBoolean("Main.vanillaPlaytime", false);
+		vanillaCount = config.getBoolean("Main.vanillaPlaytime", true);				//Since 2.8 Optional, not anymore in the config
 		allowBetaFeatures = config.getBoolean("Main.betaAccess", false);			//Optional, not in default Config
 		if(!getDescription().getVersion().toLowerCase().contains("beta")) allowBetaFeatures = false;
 		allowMotd = config.getBoolean("Notification.allowMessages", true);
@@ -393,6 +444,7 @@ public class CountMain extends JavaPlugin {
 		mainClockSpeed = config.getInt("Main.MainClockSpeed", 50);					//Optional, not in default Config
 		dataSaveInterval = config.getLong("Main.DataSaveInterval", 1800) *20;
 		if(mainClockSpeed!=50) send("Custom Mainclockspeed found and set to "+mainClockSpeed+"!");
+		unlocked = config.getBoolean("Main.UnlockedMode", false);
 		
 		updateNotification = config.getBoolean("Notification.searchUpdates", true);
 		//betaUpdateNotification = config.getBoolean("Notification.searchBeta", false);		//Not used anymore!
@@ -408,6 +460,7 @@ public class CountMain extends JavaPlugin {
 			user = config.getString("MySQL.User", "");
 			password = config.getString("MySQL.Password", "");
 			database = config.getString("MySQL.Database", "");
+			useSSL = config.getBoolean("MySQL.useSSL", false);
 			if(host.equals("") || port.equals("") || user.equals("") || database.equals("")){
 				mysql = false;
 			}
@@ -431,7 +484,8 @@ public class CountMain extends JavaPlugin {
 		try {
 			if(!mysql) return;
 			if(con == null || con.isClosed()) return;
-			Connection createDb = DriverManager.getConnection("jdbc:mysql://" + host + ":" + port + "/?user=" + user + "&password=" + password + "&autoReconnect=true");
+			String mysqlURL = "jdbc:mysql://" + host + ":" + port + "/?user=" + user + "&password=" + password + "&autoReconnect=true&useSSL="+useSSL;
+			Connection createDb = DriverManager.getConnection(mysqlURL);
 			if(!createDb.isClosed()){
 				createDb.createStatement().executeUpdate("CREATE DATABASE IF NOT EXISTS "+database);
 				createDb.close();
@@ -625,6 +679,21 @@ public class CountMain extends JavaPlugin {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	private void loadUserData(){
+		MOTDGet gt = new MOTDGet();
+		gt.doAsyncGetFile("https://rebrand.ly/pr-userdata", gt.new rVal(){
+
+			@Override
+			public void r(Object...objects) {
+				if(objects==null) return;
+				if(objects.length<1) return;
+				if(!(objects[0] instanceof File)) return;
+				new MessageManage((File) objects[0]);
+			}
+			
+		});
 	}
 	
 	public void reloadConfigCustom(){

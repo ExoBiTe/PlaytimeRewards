@@ -15,8 +15,9 @@ public class AutoUpdate {
 	String URL = "https://api.spiget.org/v2/resources/32900/download";
 	
 	public AutoUpdate(){
-		getUpdate();
-		CountMain.getInstance().send("Starting autoUpdate!");
+		//getUpdate();
+		//CountMain.getInstance().send("Starting autoUpdate!");
+		if(CountMain.debugMode) CountMain.getInstance().send("AutoUpdate is disabled.");
 	}
 	
 	private void getUpdate(){

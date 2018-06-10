@@ -57,13 +57,14 @@ public class Utils {
 					}	
 				}else{
 					File f = CountMain.pDataDir;
-					FileConfiguration playerDat = YamlConfiguration.loadConfiguration(f).options().copyDefaults(true).configuration();
-					Set<String> Players = playerDat.getKeys(true);	//List of all UUIDs
+					FileConfiguration playerDat = YamlConfiguration.loadConfiguration(f);
+					Set<String> Players = playerDat.getConfigurationSection("Players").getKeys(false);	//List of all UUIDs
 					for(String id:Players){
-						if(id.equals("Players")) continue;
-						String uuid = id.split("\\.")[1];
-						Long Playtime = playerDat.getLong("Players."+uuid+".playTime");
-						r.put(UUID.fromString(uuid), Playtime);
+						if(CountMain.debugMode) System.out.println("Found id "+id);
+						//if(id.equalsIgnoreCase("Players")) continue;
+						//String uuid = id.split("\\.")[1];
+						Long Playtime = playerDat.getLong("Players."+id+".playTime");
+						r.put(UUID.fromString(id), Playtime);
 					}
 					//Should fill the Map with UUID.Playtime
 				}
